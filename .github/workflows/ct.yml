@@ -44,7 +44,6 @@ jobs:
               find . -type f -name "*.gcda" | xargs -I@ gcov -b @ | tee -a gcov.log
           #! https://github.com/marketplace/actions/upload-a-build-artifact
           - uses: actions/upload-artifact@v3
-            id: actions-upload-artifact-LOG
             if: steps.execute-gcovprogram.outcome == 'success'
             with:
               name: my-artifact--gcovlog
@@ -61,7 +60,6 @@ jobs:
               zip -r -9 OUTPUT.zip OUTPUT
           #! https://github.com/marketplace/actions/upload-a-build-artifact
           - uses: actions/upload-artifact@v3
-            id: actions-upload-artifact-HTML
             if: steps.execute-lcovandgenhtml.outcome == 'success'
             with:
               name: my-artifact--HTML
