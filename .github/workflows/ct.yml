@@ -28,11 +28,13 @@ jobs:
             id: compile-and-link
             run: |
               cd mini-expect
+              pwd
               make COV=gcov
               ls -ltrA
           - name: Execute GcovProgram
             id: execute-gcovprogram
             run: |
+              pwd
               #! プログラムを実行する
               ./mini_expect ls -1
               #! カバレッジ率を算出する (*.gcda)
