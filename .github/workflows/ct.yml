@@ -16,6 +16,7 @@ jobs:
               gcc --version
               which lcov
               which make
+              which npm
           - name: Setup tools
             id: setup-tools
             run: |
@@ -24,9 +25,9 @@ jobs:
               sudo apt install lcov -y
               make --version
               lcov --version
-              npm init -y
-              npm install @actions/core
-              npm install @actions/github
+              sudo npm init -y
+              sudo npm install @actions/core
+              sudo npm install @actions/github
           - name: Compile and Link
             id: compile-and-link
             run: |
