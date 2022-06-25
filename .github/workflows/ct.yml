@@ -50,6 +50,8 @@ jobs:
           - name: Execute LcovProgram
             id: execute-lcovprogram
             run: |
+              #! Makefile が配置されているディレクトリに移動する (step を跨ぐとカレントディレクトリが元にもどる)
+              cd mini-expect
               #! lcov を使って *.info を生成する
               lcov --rc lcov_branch_coverage=1 -c -d . -o tmp.info
               #! /usr/include/ を計測対象外にする (tmp.info から output.info を作る)
