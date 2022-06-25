@@ -56,5 +56,5 @@ jobs:
             with:
               name: my-artifact
               path: |
-                mini_expect/OUTPUT.zip
-                mini_expect/gcov.log
+                mini-expect/OUTPUT.zip
+                mini-expect/gcov.log
