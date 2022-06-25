@@ -53,7 +53,7 @@ jobs:
               path: mini-expect/gcov.log
           #! gcov -b の値が合格値に達しているか？
           - name: Has the value of gcov -b reached the pass value?
-            uses: robozushi10/ghaa@main
+            uses: robozushi10/ghaa@master
             with:
               log: mini-expect/gcov.log
           - name: Execute LcovProgram
