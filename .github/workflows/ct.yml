@@ -44,6 +44,7 @@ jobs:
               find . -type f -name "*.gcda" | xargs -I@ gcov -b @ | tee -a gcov.log
           - uses: actions/upload-artifact@v3
             id: actions-upload-artifact-log
+            if: steps.execute-gcovprogram.outcome == 'success'
             with:
               name: my-artifact-log
               path: mini-expect/gcov.log
