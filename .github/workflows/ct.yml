@@ -29,9 +29,10 @@ jobs:
               sudo apt install lcov -y
               make --version
               lcov --version
-              npm init -y
-              npm install @actions/core
-              npm install @actions/github
+              sudo npm install -g @actions/core @actions/github
+#             npm init -y
+#             npm install @actions/core
+#             npm install @actions/github
           - name: Compile and Link
             id: compile-and-link
             run: |
