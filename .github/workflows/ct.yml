@@ -47,8 +47,8 @@ jobs:
             with:
               name: my-artifact-log
               path: mini-expect/gcov.log
-          - name: Execute GcovProgram
-            id: execute-gcovprogram
+          - name: Execute LcovProgram
+            id: execute-lcovprogram
             run: |
               #! lcov を使って *.info を生成する
               lcov --rc lcov_branch_coverage=1 -c -d . -o tmp.info
