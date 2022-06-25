@@ -50,10 +50,11 @@ jobs:
               genhtml --branch-coverage -o OUTPUT -p . -f output.info 
               #! OUTPUT を zip にする
               zip -r -9 OUTPUT.zip OUTPUT
+          #! https://github.com/marketplace/actions/upload-a-build-artifact
           - uses: actions/upload-artifact@v3
             id: actions-upload-artifact
             with:
               name: my-artifact
               path: |
-                OUTPUT.zip
-                gcov.log
+                mini_expect/OUTPUT.zip
+                mini_expect/gcov.log
