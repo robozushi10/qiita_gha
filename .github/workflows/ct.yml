@@ -9,9 +9,16 @@ jobs:
             uses: actions/checkout@v2  
           - name: Preparation
             run: |
+              set +e
               gcc --version
               which lcov
               which make
+          - name: Preparation
+            run: |
+              apt install make
+              apt install lcov
+              make --version
+              lcov --version
           - name: Compile and Link
             run: |
               cd mini-expect
