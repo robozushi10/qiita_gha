@@ -49,5 +49,11 @@ jobs:
               #! genhtml を使って *.info から HTML を生成する
               genhtml --branch-coverage -o OUTPUT -p . -f output.info 
               #! OUTPUT を zip にする
-              zip -r -9 OUTPUT.zip OUTPUT gcov.log
-
+              zip -r -9 OUTPUT.zip OUTPUT
+          - uses: actions/upload-artifact@v3
+            id: actions-upload-artifact
+            with:
+              name: my-artifact
+              path: |
+                OUTPUT.zip
+                gcov.log
