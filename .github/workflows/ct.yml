@@ -43,7 +43,8 @@ jobs:
               #! カバレッジ率を算出する (*.gcda)
               find . -type f -name "*.gcda" | xargs -I@ gcov -b @ | tee -a gcov.log
           #! 直前の gcov -b のログを upload する
-          - uses: actions/upload-artifact@v3
+          - name: upload artifact-log
+            uses: actions/upload-artifact@v3
             id: actions-upload-artifact-log
             #! gcov -b に成功していれば
             if: steps.execute-gcovprogram.outcome == 'success'
@@ -64,7 +65,8 @@ jobs:
               #! OUTPUT を zip にする
               zip -r -9 OUTPUT.zip OUTPUT
           #! https://github.com/marketplace/actions/upload-a-build-artifact
-          - uses: actions/upload-artifact@v3
+          - name: upload artifact-html
+            uses: actions/upload-artifact@v3
             id: actions-upload-artifact
             #! lcov に成功していれば
             if: steps.execute-lcovprogram.outcome == 'success'
