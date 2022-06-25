@@ -27,6 +27,7 @@ jobs:
           - name: Compile and Link
             id: compile-and-link
             run: |
+              #! Makefile が配置されているディレクトリに移動する
               cd mini-expect
               pwd
               make COV=gcov
@@ -34,7 +35,8 @@ jobs:
           - name: Execute GcovProgram
             id: execute-gcovprogram
             run: |
-              pwd
+              #! Makefile が配置されているディレクトリに移動する (step を跨ぐとカレントディレクトリが元にもどる)
+              cd mini-expect
               #! プログラムを実行する
               ./mini_expect ls -1
               #! カバレッジ率を算出する (*.gcda)
