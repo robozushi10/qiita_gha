@@ -15,8 +15,9 @@ jobs:
               which make
           - name: Preparation
             run: |
-              apt install make
-              apt install lcov
+              sudo apt update
+              sudo apt install make -y
+              sudo apt install lcov -y
               make --version
               lcov --version
           - name: Compile and Link
