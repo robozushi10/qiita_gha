@@ -42,8 +42,10 @@ jobs:
               ./mini_expect ls -1
               #! カバレッジ率を算出する (*.gcda)
               find . -type f -name "*.gcda" | xargs -I@ gcov -b @ | tee -a gcov.log
+          #! 直前の gcov -b のログを upload する
           - uses: actions/upload-artifact@v3
             id: actions-upload-artifact-log
+            #! gcov -b に成功していれば
             if: steps.execute-gcovprogram.outcome == 'success'
             with:
               name: my-artifact-log
@@ -64,6 +66,8 @@ jobs:
           #! https://github.com/marketplace/actions/upload-a-build-artifact
           - uses: actions/upload-artifact@v3
             id: actions-upload-artifact
+            #! lcov に成功していれば
+            if: steps.execute-lcovprogram.outcome == 'success'
             with:
               name: my-artifact
               path: mini-expect/OUTPUT.zip
