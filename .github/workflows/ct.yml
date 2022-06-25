@@ -1,0 +1,14 @@
+name: Continuous Integration
+on: push
+ 
+jobs:
+    gcov:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            users: actions/checkout@v2  
+          - name: Compile and Link
+            run: |
+              cd mini-expect
+              make
+              ls -ltrA
