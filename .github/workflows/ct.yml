@@ -22,10 +22,11 @@ jobs:
               sudo apt update
               sudo apt install make -y
               sudo apt install lcov -y
-              npm install @actions/core
-              npm install @actions/github
               make --version
               lcov --version
+              npm init -y
+              npm install @actions/core
+              npm install @actions/github
           - name: Compile and Link
             id: compile-and-link
             run: |
