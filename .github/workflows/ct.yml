@@ -34,7 +34,7 @@ jobs:
               make COV=gcov
               ls -ltrA
           - name: Execute GcovProgram
-            id: execute-gcovprogram
+            id: executegcovprogram
             run: |
               #! Makefile が配置されているディレクトリに移動する (step を跨ぐとカレントディレクトリが元にもどる)
               cd mini-expect
@@ -44,7 +44,7 @@ jobs:
               find . -type f -name "*.gcda" | xargs -I@ gcov -b @ | tee -a gcov.log
           #! https://github.com/marketplace/actions/upload-a-build-artifact
           - uses: actions/upload-artifact@v3
-            if: steps.execute-gcovprogram.outcome == 'success'
+            if: steps.executegcovprogram.outcome == 'success'
             with:
               name: my-artifact--gcovlog
               path: mini-expect/gcov.log
