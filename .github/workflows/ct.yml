@@ -1,25 +1,37 @@
+---
 name: Continuous Integration
 on: push
  
 jobs:
-    gcov:
+    setup:
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
             uses: actions/checkout@v2  
-          - name: Preparation
+          - name: Confirmation
             run: |
               set +e
               gcc --version
               which lcov
               which make
-          - name: Preparation
+          - name: Setup tools
             run: |
               sudo apt update
               sudo apt install make -y
               sudo apt install lcov -y
               make --version
               lcov --version
+    gcov:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v2  
+          - name: Confirmation
+            run: |
+              set +e
+              gcc --version
+              which lcov
+              which make
           - name: Compile and Link
             run: |
               cd mini-expect
