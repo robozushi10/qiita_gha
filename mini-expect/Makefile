@@ -28,4 +28,6 @@ $(PROGRAM):$(OBJS) $(HDRS)
 .PHONY: clean
 clean:
 	rm -f $(OBJS) $(PROGRAM) $(GCNOOBJS) $(GCDAOBJS) $(GCOVOBJS)
+	rm -f *.info *.log
+	rm -rf OUTPUT
 

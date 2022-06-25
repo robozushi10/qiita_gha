@@ -30,6 +30,7 @@ jobs:
               #! Makefile が配置されているディレクトリに移動する
               cd mini-expect
               pwd
+              make clean
               make COV=gcov
               ls -ltrA
           - name: Execute GcovProgram

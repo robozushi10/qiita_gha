@@ -1,0 +1,3 @@
+mini-expect/*.gc*
+mini-expect/*.o
+mini-expect/mini-expect
