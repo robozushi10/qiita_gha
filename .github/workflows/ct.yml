@@ -42,6 +42,14 @@ jobs:
               ./mini_expect ls -1
               #! カバレッジ率を算出する (*.gcda)
               find . -type f -name "*.gcda" | xargs -I@ gcov -b @ | tee -a gcov.log
+          - uses: actions/upload-artifact@v3
+            id: actions-upload-artifact-log
+            with:
+              name: my-artifact-log
+              path: mini-expect/gcov.log
+          - name: Execute GcovProgram
+            id: execute-gcovprogram
+            run: |
               #! lcov を使って *.info を生成する
               lcov --rc lcov_branch_coverage=1 -c -d . -o tmp.info
               #! /usr/include/ を計測対象外にする (tmp.info から output.info を作る)
@@ -55,6 +63,4 @@ jobs:
             id: actions-upload-artifact
             with:
               name: my-artifact
-              path: |
-                mini-expect/OUTPUT.zip
-                mini-expect/gcov.log
+              path: mini-expect/OUTPUT.zip
