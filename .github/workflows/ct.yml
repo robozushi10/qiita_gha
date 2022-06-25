@@ -17,6 +17,10 @@ jobs:
               which lcov
               which make
               which npm
+          - uses: actions/checkout@v2.0.0
+          - name: Setup tmate session
+            # v3.11
+            uses: mxschmitt/action-tmate@8b4e4ac71822ed7e0ad5fb3d1c33483e9e8fb270
           - name: Setup tools
             id: setup-tools
             run: |
