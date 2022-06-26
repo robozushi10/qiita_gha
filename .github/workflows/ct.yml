@@ -84,6 +84,11 @@ jobs:
 #         - name: Download svg
 #           run: |
 #             curl -o mini-expect/coverage.svg https://img.shields.io/badge/coverage-%25-green
+          - name: Create Badge if pass
+            if: ${{ steps.gcov_result.outputs.pass }} == true
+            run: cp ./.github/workflows/pass.svg ./mini-expect/coverage.svg
+          - name: Create Badge if fail
+            run: cp ./.github/workflows/fail.svg ./mini-expect/coverage.svg
           - uses: emibcn/badge-action@v1.2.1
             with:
               label: 'Test coverage'
