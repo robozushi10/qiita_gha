@@ -81,6 +81,9 @@ jobs:
           - name: Output Message
             run: |
               echo "steps.gcov_result.outputs.pass => <${{ steps.gcov_result.outputs.pass }}>"
+          - name: Download svg
+            run: |
+              curl -o mini-expect/coverage.svg https://img.shields.io/badge/coverage-%25-green
           - uses: emibcn/badge-action@v1.2.1
             with:
               label: 'Test coverage'
