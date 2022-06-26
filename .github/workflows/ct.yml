@@ -80,7 +80,7 @@ jobs:
               zip -r -9 OUTPUT.zip OUTPUT
           - name: Output Message
             run: |
-              echo "steps.gcov_result.pass => <${{ steps.gcov_result.pass }}>"
+              echo "steps.gcov_result.outputs.pass => <${{ steps.gcov_result.outputs.pass }}>"
 #         #! https://github.com/marketplace/actions/upload-a-build-artifact
 #         - name: upload artifact-html
 #           uses: actions/upload-artifact@v3
