@@ -87,7 +87,8 @@ jobs:
               status: '53.4%'
               color: 'blue,555,daf'
 #             path: '.github/badges/coverage.svg'
-              path: 'actions/workflows/ct.yml/badge.svg'
+              path: '.github/workflows/badge.svg'
+#             path: 'actions/workflows/ct.yml/badge.svg'
 #         #! https://github.com/marketplace/actions/upload-a-build-artifact
 #         - name: upload artifact-html
 #           uses: actions/upload-artifact@v3
