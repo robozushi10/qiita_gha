@@ -31,4 +31,3 @@ clean:
 	rm -f *.info *.log
 	rm -rf OUTPUT
 
-
