@@ -81,6 +81,12 @@ jobs:
           - name: Output Message
             run: |
               echo "steps.gcov_result.outputs.pass => <${{ steps.gcov_result.outputs.pass }}>"
+          - uses: emibcn/badge-action@v1.2.1
+            with:
+              label: 'Test coverage'
+              status: '53.4%'
+              color: 'blue,555,daf'
+              path: '.github/badges/coverage.svg'
 #         #! https://github.com/marketplace/actions/upload-a-build-artifact
 #         - name: upload artifact-html
 #           uses: actions/upload-artifact@v3
