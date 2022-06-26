@@ -1,0 +1,707 @@
+        -:    0:Source:mini_exp_main.c
+        -:    0:Graph:./mini_exp_main.gcno
+        -:    0:Data:./mini_exp_main.gcda
+        -:    0:Runs:1
+        -:    1:#include    "mini_exp_std.h"
+        -:    2:#include    "mini_exp_inst.h"
+        -:    3:#include    "mini_exp_futex.h"
+        -:    4:#include    "mini_exp_command.h"
+        -:    5:#include    "mini_exp_mem.h"
+        -:    6:
+        -:    7:#define MINI_EXP_SHMFILE_KEY    "/dev/shm/mini_exp_key" 
+        -:    8:#define MINI_EXP_SHMFILE_KEY2   "/dev/shm/mini_exp_key2"
+        -:    9:#define MINI_EXP_SHMFILE_GO     "/dev/shm/mini_exp_go"  
+        -:   10:#define MINI_EXP_SHMFILE_GO2    "/dev/shm/mini_exp_go2" 
+        -:   11:
+        -:   12:typedef
+        -:   13:struct _thread_arg
+        -:   14:{
+        -:   15:    int     thread_no;
+        -:   16:    void  * data;
+        -:   17:}
+        -:   18:    thread_arg_t;
+        -:   19:
+        -:   20:unsigned int  * Lock_key    = NULL;
+        -:   21:unsigned int  * Lock_key2   = NULL;
+        -:   22:unsigned int  * Go          = NULL;
+        -:   23:unsigned int  * Go2         = NULL;
+        -:   24:
+        -:   25:static int  mini_exp_initialize(void);
+        -:   26:static int  mini_exp_getptymaster(char ** master_name,char * slave_name,struct termios * termp,struct winsize * winp);
+        -:   27:static int  mini_exp_setup_stat_of_ptymaster(int master);
+        -:   28:static int  mini_exp_getptyslave(char * slave_name);
+        -:   29:static void mini_exp_spawn_cmd_child_proc(char * slave_name,int pp1[],int pp2[]);
+        -:   30:static void mini_exp_spawn_cmd_parent_proc(int master,int pp1[],int pp2[]);
+        -:   31:static void mini_exp_spawn_cmd(int argc,char * argv[0]);
+        -:   32:static void mini_exp_setup_stat_of_pipe_for_select(int p1[]);
+        -:   33:static void mini_exp_select_task(void * arg);
+        -:   34:static void mini_exp_invoke_select(void);
+        -:   35:static void mini_exp_expectl(int fd_of_master,int fdw_sel,int v,int v2);
+        -:   36:
+        -:   37:
+        -:   38:static  int
+function mini_exp_setup_futex called 1 returned 100% blocks executed 62%
+        1:   39:mini_exp_setup_futex(void)
+        -:   40:{
+        1:   41:    Lock_key  = MINI_EXP_get_shm_area(MINI_EXP_SHMFILE_KEY , sizeof(size_t));
+call    0 returned 100%
+        1:   42:    Lock_key2 = MINI_EXP_get_shm_area(MINI_EXP_SHMFILE_KEY2, sizeof(size_t));
+call    0 returned 100%
+        1:   43:    Go        = MINI_EXP_get_shm_area(MINI_EXP_SHMFILE_GO  , sizeof(size_t));
+call    0 returned 100%
+        1:   44:    Go2       = MINI_EXP_get_shm_area(MINI_EXP_SHMFILE_GO2 , sizeof(size_t));
+call    0 returned 100%
+        1:   45:    *Go       = 0;
+        1:   46:    *Go2      = 0;
+        -:   47:
+        1:   48:    if((!Lock_key) || (!Lock_key2) || (!Go) || (!Go2))
+branch  0 taken 100% (fallthrough)
+branch  1 taken 0%
+branch  2 taken 100% (fallthrough)
+branch  3 taken 0%
+branch  4 taken 100% (fallthrough)
+branch  5 taken 0%
+branch  6 taken 0% (fallthrough)
+branch  7 taken 100%
+        -:   49:    {
+    #####:   50:        fprintf(stderr, "ERROR: could not get shm area\n");
+call    0 never executed
+    #####:   51:        fprintf(stderr, "ERROR: Lock_key (%p)\n", Lock_key);
+call    0 never executed
+    #####:   52:        fprintf(stderr, "ERROR: Lock_key2(%p)\n", Lock_key2);
+call    0 never executed
+    #####:   53:        fprintf(stderr, "ERROR: Go (%p)      \n", Go);
+call    0 never executed
+    #####:   54:        fprintf(stderr, "ERROR: Go2(%p)      \n", Go2);
+call    0 never executed
+    #####:   55:        return  -1;
+        -:   56:    }
+        -:   57:
+        1:   58:    return  0;
+        -:   59:}
+        -:   60:
+        -:   61:
+        -:   62:static int
+function mini_exp_initialize called 1 returned 100% blocks executed 71%
+        1:   63:mini_exp_initialize(void)
+        -:   64:{
+        1:   65:    int     err = -1;
+        -:   66:
+        1:   67:    signal(SIGPIPE, SIG_IGN);
+call    0 returned 100%
+        -:   68:
+        1:   69:    err = mini_exp_setup_futex();
+call    0 returned 100%
+        1:   70:    if(err)
+branch  0 taken 0% (fallthrough)
+branch  1 taken 100%
+        -:   71:    {
+    #####:   72:        fprintf(stderr, "mini_exp_setup_futex()\n");
+call    0 never executed
+    #####:   73:        return  err;
+        -:   74:    }
+        -:   75:
+        1:   76:    return  0;
+        -:   77:}
+        -:   78:
+        -:   79:
+        -:   80:static int
+function mini_exp_getptymaster called 1 returned 100% blocks executed 100%
+        1:   81:mini_exp_getptymaster
+        -:   82:(
+        -:   83:    char            **  master_name,
+        -:   84:    char            *   slave_name,
+        -:   85:    struct termios  *   termp,
+        -:   86:    struct winsize  *   winp
+        -:   87:)
+        -:   88:{
+        1:   89:    int             ret             = -1;
+        -:   90:    static int      master          = -1;
+        1:   91:    int             slave           = -1;
+        -:   92:
+        1:   93:    master = MINI_EXP_get_master_fd();
+call    0 returned 100%
+        -:   94:
+        1:   95:    if(master < 0) /* master was not existed */
+branch  0 taken 100% (fallthrough)
+branch  1 taken 0%
+        -:   96:    {
+        1:   97:        ret = openpty(&master, &slave, *master_name, NULL, NULL);
+call    0 returned 100%
+        -:   98:        ASSERT(ret == 0);
+        1:   99:        MINI_EXP_set_master_fd(&master);
+call    0 returned 100%
+        -:  100:    }
+        -:  101:    else
+        -:  102:    {
+        -:  103:        /* master was already existed */;
+        -:  104:    }
+        -:  105:
+        1:  106:    strcpy(slave_name, ttyname(slave));
+call    0 returned 100%
+        1:  107:    close(slave);
+call    0 returned 100%
+        -:  108:
+        1:  109:    fcntl(master, F_SETFD, 1);
+call    0 returned 100%
+        -:  110:
+        1:  111:    return  master;
+        -:  112:}
+        -:  113:
+        -:  114:
+        -:  115:static int
+function mini_exp_setup_stat_of_ptymaster called 1 returned 100% blocks executed 100%
+        1:  116:mini_exp_setup_stat_of_ptymaster(int master)
+        -:  117:{
+        1:  118:    int             cur_stat        = 0;
+        1:  119:    int             err             = 0;
+        -:  120:
+        1:  121:    cur_stat      = fcntl(master, F_GETFL);
+call    0 returned 100%
+        1:  122:    cur_stat     |= O_RDWR;
+        1:  123:    cur_stat     |= O_NONBLOCK;
+        1:  124:    err           = fcntl(master, F_SETFL, cur_stat);
+call    0 returned 100%
+        -:  125:
+        1:  126:    return  err;
+        -:  127:}
+        -:  128:
+        -:  129:
+        -:  130:static int
+function mini_exp_getptyslave called 1 returned 100% blocks executed 100%
+        1:  131:mini_exp_getptyslave(char * slave_name)
+        -:  132:{
+        1:  133:    int     slave   =   -1;
+        -:  134:
+        1:  135:    slave = open(slave_name, O_RDWR);
+call    0 returned 100%
+        -:  136:
+        -:  137:    /* duplicate 0 onto 1 and 2 to prepare for stty */
+        1:  138:    fcntl(0, F_DUPFD, 1); 
+call    0 returned 100%
+        1:  139:    fcntl(0, F_DUPFD, 2);
+call    0 returned 100%
+        -:  140:
+        -:  141:    /* If you want to save current terminal settings, you will call
+        -:  142:     * ttytype(SET_TTYTYPE,slave,ttycopy,ttyinit,stty_args); */
+        1:  143:    ioctl(0, TIOCSCTTY, NULL);
+call    0 returned 100%
+        -:  144:
+        1:  145:    return  slave;
+        -:  146:}
+        -:  147:
+        -:  148:
+        -:  149:void
+function mini_exp_spawn_cmd_child_proc called 1 returned 100% blocks executed 95%
+        1:  150:mini_exp_spawn_cmd_child_proc
+        -:  151:(
+        -:  152:    char  * slave_name,
+        -:  153:    int     pp1[],
+        -:  154:    int     pp2[]
+        -:  155:)
+        -:  156:{
+        1:  157:    int     slave       = -1;
+        1:  158:    int     rc          = -1;
+        1:  159:    int     wc          = -1;
+        1:  160:    int     ret         = -1;
+        1:  161:    char    sync_byte   = '0';
+        1:  162:    int     v           = *Lock_key;
+        -:  163:    
+        1:  164:    ret = close(pp1[R]); ASSERT(ret != -1);
+call    0 returned 100%
+        1:  165:    ret = close(pp2[W]); ASSERT(ret != -1);
+call    0 returned 100%
+        -:  166:    
+        1:  167:    setsid();
+call    0 returned 100%
+        -:  168:
+        1:  169:    fcntl(2, F_DUPFD, 3);
+call    0 returned 100%
+        -:  170:    
+        1:  171:    ret = close(0); ASSERT(ret != -1);
+call    0 returned 100%
+        1:  172:    ret = close(1); ASSERT(ret != -1);
+call    0 returned 100%
+        1:  173:    ret = close(2); ASSERT(ret != -1);
+call    0 returned 100%
+        -:  174:    
+        1:  175:    slave = mini_exp_getptyslave(slave_name);
+call    0 returned 100%
+        -:  176:    (void) slave; /* don't use slave (robozushi10) */
+        -:  177:    
+        1:  178:    signal(1, SIG_IGN);
+call    0 returned 100%
+        -:  179:    /* exp_console_set(); */
+        -:  180:    /* for (i = 1; i < NSIG; i++)
+        -:  181:       {
+        -:  182:           signal(i, ignore[i] ? SIG_IGN : SIG_DFL);
+        -:  183:       } */
+        -:  184:    
+        1:  185:    MINI_EXP_WAIT_FOR_SETUP(Lock_key, v, NULL);
+call    0 returned 100%
+        -:  186:
+        1:  187:    wc  = write(pp1[W], " ", 1); ASSERT(wc != -1);
+call    0 returned 100%
+        1:  188:    ret = close(pp1[W]);         ASSERT(ret != -1);
+call    0 returned 100%
+        -:  189:
+        2:  190:    MINI_EXP_WAKE(Lock_key, 1);
+call    0 returned 100%
+branch  1 taken 50%
+branch  2 taken 50% (fallthrough)
+call    3 returned 100%
+        -:  191:    
+       1*:  192:    while( ((rc = read(pp2[R], &sync_byte, 1)) < 0) && (errno == EINTR) )
+call    0 returned 100%
+branch  1 taken 0% (fallthrough)
+branch  2 taken 100%
+branch  3 never executed
+branch  4 never executed
+        -:  193:    {
+        -:  194:        /* empty */;
+        -:  195:    }
+        -:  196:
+        1:  197:    ret = close(pp2[R]);
+call    0 returned 100%
+        -:  198:    ASSERT(ret != -1);
+        1:  199:}
+        -:  200:
+        -:  201:
+        -:  202:static void
+function mini_exp_spawn_cmd_parent_proc called 1 returned 100% blocks executed 94%
+        1:  203:mini_exp_spawn_cmd_parent_proc(int master, int pp1[], int pp2[])
+        -:  204:{
+        1:  205:    int     rc  = -1;
+        1:  206:    int     wc  = -1;
+        1:  207:    int     v   = *Lock_key;
+        -:  208:    char    buf[BUFSIZ];
+        -:  209:    
+        1:  210:    close(pp1[W]); 
+call    0 returned 100%
+        1:  211:    close(pp2[R]);
+call    0 returned 100%
+        -:  212:
+        1:  213:    fcntl(master, F_SETFD, 1);
+call    0 returned 100%
+        -:  214:
+        2:  215:    MINI_EXP_WAKE(Lock_key, 1);
+call    0 returned 100%
+branch  1 taken 50%
+branch  2 taken 50% (fallthrough)
+call    3 returned 100%
+        -:  216:
+        -:  217:    while
+        1:  218:    (
+        1:  219:        ((rc = read(pp1[R], buf, BUFSIZ)) == -1)
+call    0 returned 100%
+branch  1 taken 0% (fallthrough)
+branch  2 taken 100%
+    #####:  220:        &&
+    #####:  221:        (errno == EINTR)
+branch  0 never executed
+branch  1 never executed
+        -:  222:    )
+        -:  223:    {
+        -:  224:        ; /* empty */
+        -:  225:    }
+        -:  226:    
+        1:  227:    MINI_EXP_WAIT_FOR_SETUP(Lock_key, v, NULL);
+call    0 returned 100%
+        -:  228:
+        1:  229:    wc = write(pp2[W], " ", 1);
+call    0 returned 100%
+        -:  230:    ASSERT(wc != -1);
+        -:  231:
+        1:  232:    close(pp1[R]);
+call    0 returned 100%
+        1:  233:    close(pp2[W]);
+call    0 returned 100%
+        1:  234:}
+        -:  235:
+        -:  236:
+        -:  237:static void
+function mini_exp_spawn_cmd called 1 returned 100% blocks executed 76%
+        1:  238:mini_exp_spawn_cmd(int argc, char * argv[0])
+        -:  239:{
+        -:  240:    int             pp1[2];
+        -:  241:    int             pp2[2];
+        1:  242:    pid_t           pid             = -1;
+        -:  243:    static  char  * master_name     = NULL;
+        -:  244:    static  char    slave_name[]    = "/dev/ttyXX";
+        1:  245:    int             master          = -1;
+        1:  246:    int             ret             = -1;
+        1:  247:    int             err             = 0;
+        1:  248:    int             v               = *Lock_key;
+        1:  249:    int             v2              = *Lock_key2;
+        -:  250:
+        -:  251:    (void) v;
+        -:  252:
+        1:  253:    master = mini_exp_getptymaster
+call    0 returned 100%
+        -:  254:             (
+        -:  255:                 &master_name,
+        -:  256:                 slave_name,
+        -:  257:                 NULL,
+        -:  258:                 NULL
+        -:  259:             );
+        -:  260:    
+        1:  261:    ret = pipe(pp1); ASSERT(ret != -1);
+call    0 returned 100%
+        1:  262:    ret = pipe(pp2); ASSERT(ret != -1);
+call    0 returned 100%
+        -:  263:
+        1:  264:    err = mini_exp_setup_stat_of_ptymaster(master);
+call    0 returned 100%
+        1:  265:    if(err)
+branch  0 taken 0% (fallthrough)
+branch  1 taken 100%
+        -:  266:    {
+    #####:  267:        fprintf(stderr, "ERROR: ptymaster settings error\n");
+call    0 never executed
+    #####:  268:        exit(40);
+call    0 never executed
+        -:  269:    }
+        -:  270:
+        1:  271:    pid = fork(); ASSERT(pid != -1);
+call    0 returned 200%
+        -:  272:
+        2:  273:    if(pid > 0)
+branch  0 taken 50% (fallthrough)
+branch  1 taken 50%
+        -:  274:    {
+        -:  275:        /* will do fcntl(master, F_SETFD, 1) */
+        1:  276:        mini_exp_spawn_cmd_parent_proc(master, pp1, pp2);
+call    0 returned 100%
+        1:  277:        return;
+        -:  278:    }
+        1:  279:    else if(pid == 0)
+branch  0 taken 100% (fallthrough)
+branch  1 taken 0%
+        -:  280:    {
+        -:  281:        /* invoke fcntl(0,F_DUPFD,1) and fcntl(0,F_DUPFD,2) */
+        1:  282:        mini_exp_spawn_cmd_child_proc(slave_name, pp1, pp2);
+call    0 returned 100%
+        -:  283:
+       1*:  284:        MINI_EXP_WAIT_FOR_EXEC(Lock_key2, v2, NULL);
+call    0 returned 0%
+    #####:  285:        argv++;
+    #####:  286:        execvp(argv[0], argv);
+        -:  287:    }
+        -:  288:}
+        -:  289:
+        -:  290:
+        -:  291:static void
+function mini_exp_setup_stat_of_pipe_for_select called 1 returned 100% blocks executed 100%
+        1:  292:mini_exp_setup_stat_of_pipe_for_select(int p1[])
+        -:  293:{
+        1:  294:    int             cur_stat        = 0;
+        1:  295:    int             err             = -1;
+        -:  296:    (void) err;
+        -:  297:
+        1:  298:    cur_stat  = fcntl(p1[R], F_GETFL);
+call    0 returned 100%
+        1:  299:    cur_stat |= O_NONBLOCK;
+        1:  300:    err       = fcntl(p1[R], F_SETFL, cur_stat);
+call    0 returned 100%
+        -:  301:    ASSERT(err >= 0);
+        -:  302:
+        1:  303:    cur_stat  = fcntl(p1[W], F_GETFL);
+call    0 returned 100%
+        1:  304:    cur_stat |= O_NONBLOCK;
+        1:  305:    err       = fcntl(p1[W], F_SETFL, cur_stat);
+call    0 returned 100%
+        -:  306:    ASSERT(err >= 0);
+        1:  307:}
+        -:  308:
+        -:  309:
+        -:  310:static void
+function mini_exp_select_task called 1 returned 0% blocks executed 78%
+        1:  311:mini_exp_select_task(void * arg)
+        -:  312:{
+        -:  313:    int             p1[2];
+        1:  314:    int             ret             = -1;
+        1:  315:    int             n               = 0;
+        1:  316:    int             v               = 0;
+        1:  317:    int             is_poll_master  = 0;
+        1:  318:    int             fd_of_master    = -1;
+        -:  319:    fd_set          readfds;
+        -:  320:    fd_set          writefds;
+        -:  321:    fd_set          exceptfds;
+        -:  322:    char            buf[BUFSIZ];
+        -:  323:    struct  timeval time;
+        -:  324:    
+        1:  325:    ret       = pipe(p1);
+call    0 returned 100%
+        -:  326:    ASSERT(ret != -1);/* C-R, P-W */
+        -:  327:#if 0
+        -:  328:    FDW_sel   = p1[W];
+        -:  329:#else
+        1:  330:    MINI_EXP_set_select_fdw(&p1[W]);
+call    0 returned 100%
+        -:  331:#endif
+        -:  332:
+        1:  333:    mini_exp_setup_stat_of_pipe_for_select(p1);
+call    0 returned 100%
+        -:  334:
+        -:  335:    static  int  is_first        = true;
+        -:  336:
+        -:  337:    while(1)
+        -:  338:    {
+        7:  339:        v               =   *Lock_key;
+        7:  340:        fd_of_master    =   MINI_EXP_get_master_fd();
+call    0 returned 100%
+        7:  341:        if(is_poll_master)
+branch  0 taken 43% (fallthrough)
+branch  1 taken 57%
+        -:  342:        {
+        -:  343:            for (;;)
+        -:  344:            {
+       3*:  345:                FD_ZERO(&readfds);
+call    0 returned 100%
+        3:  346:                FD_ZERO(&exceptfds);
+call    0 returned 100%
+        3:  347:                FD_SET(p1[0], &readfds);
+        3:  348:                FD_SET(fd_of_master , &readfds);
+        3:  349:                FD_SET(fd_of_master , &exceptfds);
+        3:  350:                time.tv_sec  = 1;
+        3:  351:                time.tv_usec = 0;
+        3:  352:                if(is_first)
+branch  0 taken 33% (fallthrough)
+branch  1 taken 67%
+        -:  353:                {
+       1*:  354:                    MINI_EXP_WAKE2(Lock_key2,1);
+call    0 never executed
+branch  1 taken 0%
+branch  2 taken 100% (fallthrough)
+call    3 returned 100%
+        1:  355:                    is_first = false;
+        -:  356:                }
+        3:  357:                usleep(1*10*1000);  /* ZANTEI */
+call    0 returned 100%
+        3:  358:                n = select(fd_of_master +1, &readfds, &writefds, &exceptfds, NULL);
+call    0 returned 100%
+        3:  359:                if (n > 0)
+branch  0 taken 100% (fallthrough)
+branch  1 taken 0%
+        -:  360:                {
+        3:  361:                    break;
+        -:  362:                }
+    #####:  363:                else if (n == 0)
+branch  0 never executed
+branch  1 never executed
+        -:  364:                { 
+        -:  365:                    ; /* timeout */
+        -:  366:                }
+    #####:  367:                else if (n < 0)
+branch  0 never executed
+branch  1 never executed
+        -:  368:                {
+    #####:  369:                    exit(999);
+call    0 never executed
+        -:  370:                }
+        -:  371:            } /* end of for(;;) */
+        -:  372:        }
+        -:  373:        else
+        -:  374:        {
+        -:  375:            for (;;)
+        -:  376:            {
+       4*:  377:                FD_ZERO(&readfds);
+call    0 returned 100%
+        4:  378:                FD_ZERO(&writefds);
+call    0 returned 100%
+        4:  379:                FD_ZERO(&exceptfds);
+call    0 returned 100%
+        4:  380:                FD_SET(p1[0], &readfds);
+        4:  381:                time.tv_sec  = 1;
+        4:  382:                time.tv_usec = 0;
+       4*:  383:                MINI_EXP_WAKE(Lock_key, 1);
+call    0 never executed
+branch  1 taken 0%
+branch  2 taken 100% (fallthrough)
+call    3 returned 100%
+        -:  384:
+        4:  385:                if(p1[0] > fd_of_master )
+branch  0 taken 25% (fallthrough)
+branch  1 taken 75%
+        -:  386:                {
+        1:  387:                    usleep(1*10*1000); /* ZANTEI */
+call    0 returned 100%
+        1:  388:                    n = select(p1[0]+1, &readfds, &writefds, &exceptfds, NULL);
+call    0 returned 100%
+        -:  389:                }
+        -:  390:                else
+        -:  391:                {
+        3:  392:                    usleep(1*10*1000); /* ZANTEI */
+call    0 returned 67%
+        2:  393:                    n = select(fd_of_master +1, &readfds, &writefds, &exceptfds, NULL);
+call    0 returned 100%
+        -:  394:                }
+        -:  395:
+        3:  396:                if (n > 0)
+branch  0 taken 100% (fallthrough)
+branch  1 taken 0%
+        -:  397:                {
+        3:  398:                    break;
+        -:  399:                }
+    #####:  400:                else if (n == 0)
+branch  0 never executed
+branch  1 never executed
+        -:  401:                { 
+        -:  402:                    ; /* timeout */
+        -:  403:                }
+    #####:  404:                else if (n < 0) /* 返り値が負の数なら例外 */
+branch  0 never executed
+branch  1 never executed
+        -:  405:                {
+    #####:  406:                    exit(250);
+call    0 never executed
+        -:  407:                }
+        -:  408:            } /* end of for(;;) */
+        3:  409:            n = read(p1[0], buf, BUFSIZ); /* none blocking */
+call    0 returned 100%
+        -:  410:        }
+        -:  411:
+        6:  412:        if(*buf == '\0')
+branch  0 taken 100% (fallthrough)
+branch  1 taken 0%
+        -:  413:        {
+        6:  414:            is_poll_master = (is_poll_master == false) ? true : false;
+        -:  415:        }
+        -:  416:    } /* end of while(1) */
+        -:  417:}
+        -:  418:
+        -:  419:
+        -:  420:static void
+function mini_exp_invoke_select called 1 returned 100% blocks executed 100%
+        1:  421:mini_exp_invoke_select(void)
+        -:  422:{
+        -:  423:    pthread_t       handle;
+        -:  424:    thread_arg_t    targ;
+        -:  425:
+        1:  426:    pthread_create
+call    0 returned 100%
+        -:  427:    (
+        -:  428:        &handle,
+        -:  429:        NULL,
+        -:  430:        (void *)mini_exp_select_task,
+        -:  431:        (void *)&targ
+        -:  432:    );
+        1:  433:    pthread_detach( handle );
+call    0 returned 100%
+        1:  434:}
+        -:  435:
+        -:  436:
+        -:  437:static void
+function mini_exp_expectl called 1 returned 0% blocks executed 92%
+        1:  438:mini_exp_expectl(int fd_of_master, int fdw_sel, int v, int v2)
+        -:  439:{
+        1:  440:    int             rc              = -1;
+        1:  441:    int             wc              = -1;
+        -:  442:    char            buf[BUFSIZ];
+        -:  443:
+        -:  444:    do
+        -:  445:    {
+        3:  446:        rc = read(fd_of_master , buf, BUFSIZ);
+call    0 returned 100%
+        3:  447:        if((rc == -1) && (errno != EINTR))
+branch  0 taken 33% (fallthrough)
+branch  1 taken 67%
+branch  2 taken 100% (fallthrough)
+branch  3 taken 0%
+        -:  448:        {
+        1:  449:            exit(0);
+call    0 returned 0%
+        -:  450:        }
+        -:  451:#if 1
+        2:  452:        MINI_EXP_output_mesg(buf, rc);
+call    0 returned 100%
+        -:  453:#else   /* do not input data mode (robozushi10) */
+        -:  454:        wc = write(1, buf, rc); ASSERT(wc != -1);
+        -:  455:#endif
+       2*:  456:        MINI_EXP_WAKE(Lock_key, 1);
+call    0 never executed
+branch  1 taken 0%
+branch  2 taken 100% (fallthrough)
+call    3 returned 100%
+        2:  457:        wc = write(fdw_sel, "\0", 1);
+call    0 returned 100%
+        -:  458:        ASSERT(wc != -1);
+        2:  459:        MINI_EXP_WAIT_ONLY(Lock_key, v, NULL); /* BUGS */
+call    0 returned 100%
+        -:  460:    }
+        -:  461:    while(1);
+        -:  462:}
+        -:  463:
+        -:  464:int
+function main called 1 returned 0% blocks executed 67%
+        1:  465:main(int argc, char * argv[])
+        -:  466:{
+        1:  467:    int             wc              = -1;
+        1:  468:    int             err             = 0;
+        1:  469:    int             fd_of_master    = -1;
+        1:  470:    int             fdw_sel         = -1;
+        -:  471:
+        -:  472:    // futex の初期化をする
+        1:  473:    err = mini_exp_initialize();
+call    0 returned 100%
+        1:  474:    if(err)
+branch  0 taken 0% (fallthrough)
+branch  1 taken 100%
+        -:  475:    {
+    #####:  476:        fprintf(stderr, "ERROR: mini_exp_initialize()\n");
+call    0 never executed
+    #####:  477:        exit(32);
+call    0 never executed
+        -:  478:    }
+        -:  479:
+        1:  480:    int             v               = *Lock_key;
+        1:  481:    int             v2              = *Lock_key2;
+        -:  482:
+        -:  483:    // 図の「Script」スレッドを起動させる.
+        1:  484:    mini_exp_invoke_select();
+call    0 returned 100%
+        -:  485:
+        -:  486:    // 図の「Script」「bash」間で、図の「Terminal」や「Pseudo pty master」「Pseudo pty slave」
+        -:  487:    // への書き込みをタイミングを取るための制御変数 (futex) をセットアップする.
+        1:  488:    MINI_EXP_WAIT_FOR_SETUP(Lock_key, v, NULL);
+call    0 returned 100%
+        -:  489:
+        -:  490:    // 図の「Pseudo terminal master」と「Pseudo terminal slave」を作成する.
+        -:  491:    // また、「mini_expect で自動処理させたい実行ファイル」(図の「bash」に相当) を起動させる.
+        1:  492:    mini_exp_spawn_cmd(argc, argv);
+call    0 returned 100%
+        -:  493:
+        -:  494:    // 図の「Script」のファイルディスクリプタを取得する.
+        1:  495:    fdw_sel = MINI_EXP_get_select_fdw();
+call    0 returned 100%
+        1:  496:    wc = write(fdw_sel, "\0", 1);
+call    0 returned 100%
+        1:  497:    if(wc == -1)
+branch  0 taken 0% (fallthrough)
+branch  1 taken 100%
+        -:  498:    {
+    #####:  499:        perror("write(fdw_sel)");
+call    0 never executed
+    #####:  500:        exit(59);
+call    0 never executed
+        -:  501:    }
+        -:  502:
+        -:  503:    // 図の「Pseudo terminal master」のファイルディスクリプタを取得する.
+        1:  504:    fd_of_master =  MINI_EXP_get_master_fd();
+call    0 returned 100%
+        -:  505:
+        1:  506:    MINI_EXP_WAIT_ONLY(Lock_key, v, NULL);
+call    0 returned 100%
+        -:  507:
+        -:  508:    // 図の「Script」と「Pseudo terminal master」とのやりとりをする
+        1:  509:    mini_exp_expectl(fd_of_master, fdw_sel, v, v2);
+call    0 returned 0%
+        -:  510:
+        -:  511:    /* not reach (robozushi10) */
+    #####:  512:    int     status = 0;
+    #####:  513:    wait(&status);
+call    0 never executed
+        -:  514:
+    #####:  515:    return 0;
+        -:  516:}
+        -:  517:

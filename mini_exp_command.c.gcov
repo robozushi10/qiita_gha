@@ -1,0 +1,210 @@
+        -:    0:Source:mini_exp_command.c
+        -:    0:Graph:./mini_exp_command.gcno
+        -:    0:Data:./mini_exp_command.gcda
+        -:    0:Runs:1
+        -:    1:#include "mini_exp_std.h"
+        -:    2:#include "mini_exp_inst.h"
+        -:    3:#include "mini_exp_futex.h"
+        -:    4:
+        -:    5:#define MINI_EXP_SET_NEXT_CMD_ID    0
+        -:    6:#define MINI_EXP_GET_NEXT_CMD_ID    1
+        -:    7:
+        -:    8:typedef
+        -:    9:struct  _mini_exp_cmd_t
+        -:   10:{
+        -:   11:    char    * match;
+        -:   12:    char    * cmd;
+        -:   13:    int       timeout;
+        -:   14:}
+        -:   15:    mini_exp_cmd_t;
+        -:   16:
+        -:   17:static int mini_exp_request_next_cmd(char ** match, char ** cmd, int * timeout);
+        -:   18:static void mini_exp_pass_through_word(char * str, int len);
+        -:   19:static void mini_exp_replace_word(char * match, char * cmd, char * str, int len);
+        -:   20:
+        -:   21:static  int
+function mini_exp_cntl_cmd_id called 3 returned 100% blocks executed 83%
+        3:   22:mini_exp_cntl_cmd_id(int opt)
+        -:   23:{
+        -:   24:    static  int id  =   0;
+        3:   25:    int         ret =   -1;
+        -:   26:
+        3:   27:    switch(opt)
+branch  0 taken 33%
+branch  1 taken 67%
+branch  2 taken 0%
+        -:   28:    {
+        1:   29:    case    MINI_EXP_SET_NEXT_CMD_ID:
+        1:   30:        ++id;
+        1:   31:        ret = 0;
+        1:   32:        break;
+        2:   33:    case    MINI_EXP_GET_NEXT_CMD_ID:
+        2:   34:        ret = id;
+        2:   35:        break;
+    #####:   36:    default:
+    #####:   37:        break;
+        -:   38:    }
+        -:   39:
+        3:   40:    return  ret;
+        -:   41:}
+        -:   42:
+        -:   43:static int
+function mini_exp_request_cmd_id called 2 returned 100% blocks executed 100%
+        2:   44:mini_exp_request_cmd_id(void)
+        -:   45:{
+        2:   46:    return  mini_exp_cntl_cmd_id(MINI_EXP_GET_NEXT_CMD_ID);
+call    0 returned 100%
+        -:   47:}
+        -:   48:
+        -:   49:static  int
+function mini_exp_update_cmd_id called 1 returned 100% blocks executed 100%
+        1:   50:mini_exp_update_cmd_id(void)
+        -:   51:{
+        1:   52:    mini_exp_cntl_cmd_id(MINI_EXP_SET_NEXT_CMD_ID);
+call    0 returned 100%
+        1:   53:    return  0;
+        -:   54:}
+        -:   55:
+        -:   56:
+        -:   57:static int
+function mini_exp_request_next_cmd called 2 returned 100% blocks executed 80%
+        2:   58:mini_exp_request_next_cmd(char ** match, char ** cmd, int * timeout)
+        -:   59:{
+        -:   60:    static  mini_exp_cmd_t
+        -:   61:    mini_exp_cmd_list[] =
+        -:   62:    {
+        -:   63:#if 0
+        -:   64:        {"Name (ftp**.*****.***:robozushi10): ", "********\n", -1},
+        -:   65:        {"Password:", "********\n", -1},
+        -:   66:#if 0
+        -:   67:        {"ftp> ", "cd /piyopiyo\n", -1},
+        -:   68:        {"ftp> ", "dir\n", -1},
+        -:   69:        {"ftp> ", "dir\n", -1},
+        -:   70:        {"ftp> ", "dir\n", -1},
+        -:   71:#endif
+        -:   72:        {"ftp> ", "bye\n", -1},
+        -:   73:#else   
+        -:   74:        {"mini_expect", "pwd\n", 1},
+        -:   75:        {"$ ", "cd /tmp\n", 2},
+        -:   76:        {"$ ", "pwd\n", 2},
+        -:   77:#endif
+        -:   78:    };
+        -:   79:
+        -:   80:
+        2:   81:    int     id  = mini_exp_request_cmd_id();
+call    0 returned 100%
+        -:   82:
+        2:   83:    if(id < sizeof(mini_exp_cmd_list)/sizeof(mini_exp_cmd_list[0]))
+branch  0 taken 100% (fallthrough)
+branch  1 taken 0%
+        -:   84:    {
+        2:   85:        *match    = mini_exp_cmd_list[id].match;
+        2:   86:        *cmd     = mini_exp_cmd_list[id].cmd;
+        2:   87:        *timeout = mini_exp_cmd_list[id].timeout;
+        -:   88://      printf("\n[DEBUG] match(%s)\n",*match);
+        -:   89://      printf("[DEBUG] cmd(%s)", *cmd);
+        2:   90:        return  0;
+        -:   91:    }
+        -:   92:    else
+        -:   93:    {
+    #####:   94:        return  1; /* next cmd was not existed */
+        -:   95:    }
+        -:   96:    return  id;
+        -:   97:}
+        -:   98:
+        -:   99:    
+        -:  100:static void
+function mini_exp_pass_through_word called 0 returned 0% blocks executed 0%
+    #####:  101:mini_exp_pass_through_word(char * str, int len)
+        -:  102:{
+    #####:  103:    int     wc      =   0;
+        -:  104:
+    #####:  105:    wc = write(1, str, len);
+call    0 never executed
+        -:  106:    ASSERT(wc != -1);
+    #####:  107:}
+        -:  108:
+        -:  109:static void
+function mini_exp_replace_word called 2 returned 100% blocks executed 100%
+        2:  110:mini_exp_replace_word(char * match, char * cmd, char * str, int len)
+        -:  111:{
+        2:  112:    int     len_of_match     = strlen(match);
+        2:  113:    int     len_of_cmd      = strlen(cmd);
+        2:  114:    char  * buf             = malloc(len_of_match + 1); 
+        2:  115:    int     wc              = 0;
+        2:  116:    int     fd_of_master    = MINI_EXP_get_master_fd();
+call    0 returned 100%
+        -:  117:#if 0   /* testing */
+        -:  118:    FILE  * fp = fdopen(fd_of_master, "w");
+        -:  119:    setbuf(fp, NULL);
+        -:  120:#endif  /* testing */
+        -:  121:
+      408:  122:    while(len >= len_of_match)
+branch  0 taken 100%
+branch  1 taken 1% (fallthrough)
+        -:  123:    {   
+      406:  124:        memset(buf, '\0', len_of_match + 1); 
+      406:  125:        memcpy(buf, str, len_of_match);
+      406:  126:        if(strncmp(buf, match, len_of_match) == 0)
+branch  0 taken 1% (fallthrough)
+branch  1 taken 100%
+        -:  127:        {
+        -:  128:            /* you must do non block mode about master. */
+        1:  129:            wc   = write(1, match, len_of_match);
+call    0 returned 100%
+        -:  130:            ASSERT(wc != -1);
+        -:  131:            //usleep(1*100*1000);/* sleeping time is necessary (robozushi10) */
+        1:  132:            wc   = write(fd_of_master, cmd, len_of_cmd);
+call    0 returned 100%
+        -:  133:            ASSERT(wc != -1);
+        -:  134:            //fflush(fp);
+        1:  135:            str += len_of_match;
+        1:  136:            len -= len_of_match;
+        1:  137:            mini_exp_update_cmd_id();
+call    0 returned 100%
+        -:  138:            //usleep(1*100*1000);/* sleeping time is necessary (robozushi10) */
+        -:  139:        }
+        -:  140:        else
+        -:  141:        {
+      405:  142:            wc = write(1, buf, 1); 
+call    0 returned 100%
+        -:  143:            ASSERT(wc == 1); 
+      405:  144:            str++;
+      405:  145:            len--;
+        -:  146:        }
+        -:  147:    }   
+        -:  148:
+        2:  149:    write(1, str, len);
+call    0 returned 100%
+        -:  150:#if 0   /* testing */
+        -:  151:    free(fp);
+        -:  152:#endif  /* testing */
+        2:  153:    free(buf);
+        2:  154:}
+        -:  155:
+        -:  156:
+        -:  157:void
+function MINI_EXP_output_mesg called 2 returned 100% blocks executed 80%
+        2:  158:MINI_EXP_output_mesg(char * str, int len)
+        -:  159:{
+        2:  160:    int     err     =   0;
+        2:  161:    char  * match    = NULL;
+        2:  162:    char  * cmd     = NULL;
+        2:  163:    int     timeout = -1;
+        -:  164:
+        2:  165:    err = mini_exp_request_next_cmd(&match, &cmd, &timeout);
+call    0 returned 100%
+        2:  166:    if(!err)
+branch  0 taken 100% (fallthrough)
+branch  1 taken 0%
+        -:  167:    {
+        2:  168:        mini_exp_replace_word(match, cmd, str, len);
+call    0 returned 100%
+        -:  169:    }
+        -:  170:    else
+        -:  171:    {
+    #####:  172:        mini_exp_pass_through_word(str, len);
+call    0 never executed
+        -:  173:    }
+        2:  174:}
+        -:  175:

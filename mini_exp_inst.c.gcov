@@ -1,0 +1,120 @@
+        -:    0:Source:mini_exp_inst.c
+        -:    0:Graph:./mini_exp_inst.gcno
+        -:    0:Data:./mini_exp_inst.gcda
+        -:    0:Runs:1
+        -:    1:#include "mini_exp_std.h"
+        -:    2:#include "mini_exp_inst.h"
+        -:    3:#include "mini_exp_futex.h"
+        -:    4:#include "mini_exp_mem.h"
+        -:    5:
+        -:    6:static int mini_exp_cntl_master_fd(int opt, int * arg);
+        -:    7:static int mini_exp_cntl_select_fdw(int opt, int * arg);
+        -:    8:
+        -:    9:
+        -:   10:static int
+function mini_exp_cntl_master_fd called 12 returned 100% blocks executed 88%
+       12:   11:mini_exp_cntl_master_fd(int opt, int * arg)
+        -:   12:{
+        -:   13:    static  int     _master = -1;
+       12:   14:    int             retval  = -1;
+       12:   15:    switch(opt)
+branch  0 taken 8%
+branch  1 taken 92%
+branch  2 taken 0%
+        -:   16:    {
+        1:   17:    case    MINI_EXP_SET_MASTER_FD:
+        1:   18:        if(_master < 0)
+branch  0 taken 100% (fallthrough)
+branch  1 taken 0%
+        -:   19:        {
+        1:   20:            _master = *arg;
+        -:   21:        }
+        1:   22:        retval  =   0;
+        1:   23:        break;
+       11:   24:    case    MINI_EXP_GET_MASTER_FD:
+       11:   25:        retval  = _master;
+       11:   26:        break;
+    #####:   27:    default:
+    #####:   28:        retval  =   -1;
+    #####:   29:        break;
+        -:   30:    }
+        -:   31:
+       12:   32:    return  retval;
+        -:   33:}
+        -:   34:
+        -:   35:static int
+function mini_exp_cntl_select_fdw called 2 returned 100% blocks executed 88%
+        2:   36:mini_exp_cntl_select_fdw(int opt, int * arg)
+        -:   37:{
+        -:   38:    static  int     _fdw_sel = -1;
+        2:   39:    int             retval   = -1;
+        -:   40:
+        2:   41:    switch(opt)
+branch  0 taken 50%
+branch  1 taken 50%
+branch  2 taken 0%
+        -:   42:    {
+        1:   43:    case    MINI_EXP_SET_SELECT_FDW:
+        1:   44:        if(_fdw_sel < 0)
+branch  0 taken 100% (fallthrough)
+branch  1 taken 0%
+        -:   45:        {
+        1:   46:            _fdw_sel = *arg;
+        -:   47:        }
+        1:   48:        retval  =   0;
+        1:   49:        break;
+        1:   50:    case    MINI_EXP_GET_SELECT_FDW:
+        1:   51:        retval  = _fdw_sel;
+        1:   52:        break;
+    #####:   53:    default:
+    #####:   54:        retval  =   -1;
+    #####:   55:        break;
+        -:   56:    }
+        -:   57:
+        2:   58:    return  retval;
+        -:   59:}
+        -:   60:
+        -:   61:int
+function MINI_EXP_set_master_fd called 1 returned 100% blocks executed 100%
+        1:   62:MINI_EXP_set_master_fd(int * p_master)
+        -:   63:{
+        1:   64:    return  mini_exp_cntl_master_fd
+call    0 returned 100%
+        -:   65:            (
+        -:   66:                MINI_EXP_SET_MASTER_FD,
+        -:   67:                p_master
+        -:   68:            );
+        -:   69:}
+        -:   70:
+        -:   71:int
+function MINI_EXP_get_master_fd called 11 returned 100% blocks executed 100%
+       11:   72:MINI_EXP_get_master_fd(void)
+        -:   73:{
+       11:   74:    return mini_exp_cntl_master_fd(MINI_EXP_GET_MASTER_FD, NULL);
+call    0 returned 100%
+        -:   75:}
+        -:   76:
+        -:   77:int
+function MINI_EXP_set_select_fdw called 1 returned 100% blocks executed 100%
+        1:   78:MINI_EXP_set_select_fdw(int * p_fdw)
+        -:   79:{
+        1:   80:    return  mini_exp_cntl_select_fdw
+call    0 returned 100%
+        -:   81:            (
+        -:   82:                MINI_EXP_SET_SELECT_FDW,
+        -:   83:                p_fdw
+        -:   84:            );
+        -:   85:}
+        -:   86:
+        -:   87:int
+function MINI_EXP_get_select_fdw called 1 returned 100% blocks executed 100%
+        1:   88:MINI_EXP_get_select_fdw(void)
+        -:   89:{
+        1:   90:    return  mini_exp_cntl_select_fdw
+call    0 returned 100%
+        -:   91:            (
+        -:   92:                MINI_EXP_GET_SELECT_FDW,
+        -:   93:                NULL
+        -:   94:            );
+        -:   95:}
+        -:   96:

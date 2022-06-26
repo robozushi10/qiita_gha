@@ -1,0 +1,27 @@
+File 'mini_exp_inst.c'
+Lines executed:84.21% of 38
+Branches executed:100.00% of 10
+Taken at least once:60.00% of 10
+Calls executed:100.00% of 4
+Creating 'mini_exp_inst.c.gcov'
+
+File 'mini_exp_main.c'
+Lines executed:87.14% of 210
+Branches executed:81.25% of 64
+Taken at least once:51.56% of 64
+Calls executed:83.49% of 109
+Creating 'mini_exp_main.c.gcov'
+
+File 'mini_exp_command.c'
+Lines executed:86.89% of 61
+Branches executed:100.00% of 11
+Taken at least once:72.73% of 11
+Calls executed:84.62% of 13
+Creating 'mini_exp_command.c.gcov'
+
+File 'mini_exp_mem.c'
+Lines executed:100.00% of 17
+No branches
+Calls executed:100.00% of 6
+Creating 'mini_exp_mem.c.gcov'
+
