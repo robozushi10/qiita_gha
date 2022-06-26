@@ -62,6 +62,7 @@ jobs:
           #! gcov -b の値が合格値に達しているか？
           - name: Has the value of gcov -b reached the pass value?
             uses: robozushi10/ghaa@master
+            id: gcov_result
             with:
               log: mini-expect/gcov.log
           - name: Execute LcovProgram
@@ -77,6 +78,9 @@ jobs:
               genhtml --branch-coverage -o OUTPUT -p . -f output.info 
               #! OUTPUT を zip にする
               zip -r -9 OUTPUT.zip OUTPUT
+          - name: Output Message
+            run: |
+              echo "steps.gcov_result.pass => <${{ steps.gcov_result.pass }}>"
 #         #! https://github.com/marketplace/actions/upload-a-build-artifact
 #         - name: upload artifact-html
 #           uses: actions/upload-artifact@v3
