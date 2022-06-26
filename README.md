@@ -5,4 +5,5 @@
 
 [![Continuous Integration](https://github.com/robozushi10/qiita_gha/actions/workflows/ct.yml/coverage.svg)]
 
-[https://img.shields.io/badge/coverage-pass-green](https://github.com/robozushi10/qiita_gha/blob/master/mini-expect/coverage.svg)
+![xx](https://github.com/robozushi10/qiita_gha/blob/master/mini-expect/coverage.svg)
+
