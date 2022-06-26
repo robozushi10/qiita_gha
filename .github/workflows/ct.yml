@@ -88,6 +88,7 @@ jobs:
             if: ${{ steps.gcov_result.outputs.pass }} == true
             run: cp ./.github/workflows/pass.svg ./mini-expect/coverage.svg
           - name: Create Badge if fail
+            if: ${{ steps.gcov_result.outputs.pass }} == false
             run: cp ./.github/workflows/fail.svg ./mini-expect/coverage.svg
           - uses: emibcn/badge-action@v1.2.1
             with:
