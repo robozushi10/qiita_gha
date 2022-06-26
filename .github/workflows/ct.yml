@@ -86,7 +86,8 @@ jobs:
               label: 'Test coverage'
               status: '53.4%'
               color: 'blue,555,daf'
-              path: '.github/action/coverage.svg'
+              path: mini-expect/coverage.svg
+#             path: '.github/action/coverage.svg'
 #             path: '.github/workflows/badge.svg'
 #             path: 'actions/workflows/ct.yml/badge.svg'
 #         #! https://github.com/marketplace/actions/upload-a-build-artifact
